@@ -1,5 +1,7 @@
 import pygame
 import random
+import json
+import os
 
 # ゲームの初期設定
 pygame.init()
@@ -27,6 +29,44 @@ action_ready = False
 pause_on_full = False  # チェックボックスの状態
 player_health = 100
 enemy_health = 100
+
+def save_game_data():
+    """ゲームデータをJSONファイルに保存する関数
+    
+    現在の設定(settings)と
+    ゲームデータ(items, status, skill_tree)を
+    実行ファイルと同じディレクトリに保存する
+    """
+    data = {
+        "settings": {
+            "pause_on_full": pause_on_full
+        },
+        "game_data": {
+            "items": [],
+            "status": {},
+            "skill_tree": {}
+        }
+    }
+    with open('game_save.json', 'w') as f:
+        json.dump(data, f, indent=4)
+
+def load_game_data():
+    """保存されたゲームデータを読み込む関数
+    
+    game_save.jsonファイルから設定を読み込む
+    ファイルが存在しない場合は、デフォルト値で新規作成する
+    """
+    global pause_on_full
+    try:
+        with open('game_save.json', 'r') as f:
+            data = json.load(f)
+            pause_on_full = data["settings"]["pause_on_full"]
+    except FileNotFoundError:
+        # 初回起動時はデフォルト値を使用
+        save_game_data()
+
+# 初期設定の読み込み
+load_game_data()
 
 font = pygame.font.Font(None, 36)
 clock = pygame.time.Clock()
@@ -99,6 +139,7 @@ while running:
             elif current_screen == SETTINGS_SCREEN:
                 if checkbox_rect.collidepoint(event.pos):
                     pause_on_full = not pause_on_full
+                    save_game_data()
                 elif back_button.collidepoint(event.pos):
                     current_screen = MAIN_SCREEN
 
